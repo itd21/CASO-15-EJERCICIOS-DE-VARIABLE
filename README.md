@@ -1,0 +1,349 @@
+---
+title: "CASO 15 EJERCICIOS DE VARIALES"
+author: "ANGELICA ITZEL LOPEZ DELGADO"
+date: '2022-04-08'
+output: html_document
+code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 6
+bibliography: references.bib
+---
+
+# Objetivo
+
+Calcular probabilidades con variables aleatorias discretas y con variables aleatorias continuas con distribución uniforme
+
+# Desarrollo
+
+## Cargar librerías
+
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(gtools)
+library(knitr)
+library(cowplot) # Gráficas mismo renglones
+options(scipen = 999) # Notación normal
+```
+
+## Ejercicios con variables discretas
+
+### Tirar dos dados
+
+![](images/dos%20dados-01.jfif)
+
+#### Construir tabla de distribución
+
+```{r}
+dado <- c(1,2,3,4,5,6)
+lanzar_dados <- data.frame(permutations(n=6, r = 2, v = dado, repeats.allowed = TRUE))
+names(lanzar_dados) <- c("dado1", "dado2")
+lanzar_dados <- cbind(lanzar_dados, suma = apply(X = lanzar_dados, MARGIN = 1, FUN = sum))
+lanzar_dados
+```
+
+#### Contar frecuencias de las sumas
+
+```{r}
+tabla <- lanzar_dados %>%
+  group_by(suma) %>%
+  summarise(frec = n()) 
+tabla <-  data.frame(tabla)
+```
+
+#### Tabla con nombres de x's
+
+```{r}
+colnames(tabla) <- c('x', 'casos')
+tabla
+```
+
+#### Tabla con probabilidades
+
+```{r}
+n <- sum(tabla$casos)
+tabla <- tabla %>%
+  mutate(f.prob = round(casos / n, 4))
+tabla <- tabla %>%
+  mutate(f.acum = cumsum(f.prob))
+tabla
+```
+
+#### Visualizar frecuencias y el acumulado
+
+```{r}
+gfrecuencias <- ggplot(data = tabla) +
+  geom_col(aes(x = x, y = f.prob), fill= 'lightblue') 
+gfrecuencias
+```
+
+#### 
+
+```{r}
+gacumulada <- ggplot(data = tabla) +
+  geom_line(aes(x = x, y = f.acum), col='blue') +
+  geom_point(aes(x = x, y = f.acum), col='red')
+gacumulada
+```
+
+#### Calcular probabilidades
+
+##### Función para calcular probabilidades
+
+```{r message=FALSE, warning=FALSE}
+# Llamar la función o cargar el archivo en donde estpa la función
+source ("https://raw.githubusercontent.com/rpizarrog/probabilidad-y-estad-stica/master/Enero%20Junio%202022/funciones/funciones.para.distribuciones.r")
+```
+
+##### P(x = 3)
+
+$P(f(x=3))$
+
+La probabilidad cuando x sea igual a 3
+
+```{r}
+f.prob.discr(datos = tabla, discreta = 3, tipo = 0)
+```
+
+##### P(x = 7)
+
+$P(f(x=7))$
+
+La probabilidad cuando x sea igual a 7
+
+```{r}
+f.prob.discr(datos = tabla, discreta = 7, tipo = 0)
+```
+
+##### P(x \>= 7)
+
+$P(F(x \ge7))$
+
+La probabilidad cuando x sea mayor o igual a 7 $1 - P(F(X=6)) = P(7) + P(8) + P(9) + P(10) + P(11) + P(12)$
+
+```{r}
+f.prob.discr(datos = tabla, discreta = 7, tipo = 4)
+```
+
+##### P(x \<= 5)
+
+$P(F(x \le 5))$
+
+La probabilidad cuando x sea menor o igual a 5
+
+$P(F(X\le5)) = P(2) + P(3) + P(4) + P(5)$
+
+```{r}
+f.prob.discr(datos = tabla, discreta = 5, tipo = 3)
+```
+
+##### P(x \> 5)
+
+$P(F(x < 5))$
+
+La probabilidad cuando x sea menor a 5
+
+$P(F(X > 5)) = P(6) + P(7) + P(8) ... P(12)$
+
+```{r}
+f.prob.discr(datos = tabla, discreta = 5, tipo = 2)
+```
+
+### 
+
+### Estudiantes y oferta de empleo
+
+![](images/tres%20estudiantes%20buscan%20empleo.jpg)
+
+Tres estudiantes agendan entrevistas para un empleo de verano en el Brookwood Institute. En cada caso el resultado de la entrevista será una oferta de trabajo o ninguna oferta. Los resultados experimentales se definen en términos de los resultados de las tres entrevistas. [@lind2015].
+
+-   Enumere los resultados experimentales.
+
+-   Defina una variable aleatoria que represente el número de ofertas de trabajo. ¿Es una variable aleatoria discreta o continua?
+
+-   Dé el valor de la variable aleatoria que corresponde a cada uno de los resultados experimentales. [@lind2015].
+
+    ```{r}
+    resultado <- c(1,0) # 1 Si le ofrecen, 0 No le ofrecen
+    S <- permutations(resultado, n = 2, r = 3, repeats.allowed = TRUE)
+    S <- data.frame(S)
+    colnames(S) <- c("of1", "of2", "of3")
+    S
+    ```
+
+Son ocho resultados experimentales que presenta el espacio muestral.
+
+La variable aleatoria es $x=0$ a ninguno se le ofrece empleo, $x=1$ a uno de ellos se le ofrece empleo, $x=2$ a dos de ellos se le ofrece empleo y $x=3$ a los tres se les ofrece empleo.
+
+Es una variable aleatoria discreta con valores en $x$ de $0$ a $3$.
+
+#### Tabla de probabilidades con x's prob y acumulado
+
+Sumando las ofertas
+
+```{r}
+S <- S %>%
+    mutate(suma = of1 + of2 + of3)
+S
+# El valor de n
+n <- nrow(S)
+```
+
+Construir la tabla
+
+```{r}
+tabla <- S %>%
+  group_by(suma) %>%
+  summarise(frec = n()) 
+tabla <- data.frame(tabla)
+colnames(tabla) <- c("x", "casos")
+n <- sum(tabla$casos)
+tabla <- tabla %>%
+  mutate(f.prob = round(casos / n, 4))
+tabla <- tabla %>%
+  mutate(f.acum = cumsum(f.prob))
+tabla
+```
+
+#### Visualizar frecuencias y el acumulado
+
+```{r}
+gfrecuencias <- ggplot(data = tabla) +
+  geom_col(aes(x = x, y = f.prob), fill= 'lightblue') 
+gfrecuencias
+```
+
+```{r}
+gacumulada <- ggplot(data = tabla) +
+  geom_line(aes(x = x, y = f.acum), col='blue') +
+  geom_point(aes(x = x, y = f.acum), col='red')
+gacumulada
+```
+
+#### Calcular probabilidades
+
+##### P(x=2)
+
+¿Cuál es la probabilidad de que le ofrezcan trabajo a dos estudiantes? $P(f(x = 2))$.
+
+```{r}
+f.prob.discr(datos = tabla, discreta = 2, tipo = 0)
+```
+
+##### P(x\>=2)
+
+¿Cuál es la probabilidad de que le ofrezcan trabajo a dos o mas estudiantes? $$
+P(x \ge 2) = P(2) + P(3) + P(4)
+$$
+
+$$
+P(x \ge 2) = 1 - F(x=1)
+$$
+
+```{r}
+f.prob.discr(datos = tabla, discreta = 2, tipo = 4)
+```
+
+## Ejercicios con variables continuas y distribución uniforme
+
+![](images/funcion%20densidad%20distribucion%20uniforme-03.jpg)
+
+### Espera de autobús
+
+![](images/autobus%20parada%20de%20autobus-01.jpg){width="400"}
+
+Un autobús para por cierta parada cada 15 minutos. ¿Cuál es la probabilidad de que una persona que llega en un momento dado tenga que esperar el autobús mas de cinco minutos?
+
+#### ¿Cual es la densidad?
+
+Es la **altura**, es decir para cualquier valor desde 0 a 15 la densidad es la misma. $0.0666 …$ ó $\frac{1}{15}$ con estos valores mínimos y máximos de $0, 15$ respectivamente.
+
+Entonces la densidad para una distribución uniforme puede obtenerse mediante función *dunif()* o mediante la fórmula $\frac{1}{b-a)}$ siempre y cuando se identifiquen y se tengan los valores del intervalo mínimo $a$ y máximo $b$.
+
+```{r}
+dens <- dunif(x = 0:15, min = 0, max = 15)
+dens
+```
+
+$P(x > 5$
+
+Para calcular la probabilidad puede hacerse calculando el área que representa el intervalo cuya base es desde 5 a 15 es decir, 10 y multiplicada por la altura o la densidad $\frac{1}{15}$. O se puede encontrar mediante la función *punif()* de probabilidad de distribución uniforme.
+
+![](images/solucion%20continua%20dist.%20uniforme%20autobus%20parada%20de%20camion-01.jpg){width="450"}
+
+```{r}
+a <- 0
+b <- 15
+altura <- 1 / (b -a)
+altura
+base <- 10
+area <- base * altura
+area
+paste("La probabilidad de esperar mas de 5 minutos es de ", round(area * 100, 2), "%")
+```
+
+Calcular la probabilidad por medio de la función **punif()**
+
+$$
+P(x>5)
+$$
+
+```{r}
+x = 5
+prob1 <- punif(q = x, min = 0, max = 15)
+prob1
+prob2 <- 1  - punif(q = x, min = 0, max = 15)
+prob2
+prob3 <- punif(q = x, min = 0, max = 15, lower.tail = FALSE)
+prob3
+paste("La probabilidad de esperar mas de 5 minutos es de ", round(prob3 * 100, 2), "%")
+```
+
+$P(x < 2$)
+
+¿Cuál es la probabilidad de que una persona espere un tiempo menor que 2 minutos?
+
+![](images/solucion%20continua%20dist.%20uniforme%20autobus%20parada%20de%20camion%20menor%20igual%20a%202-01.jpg){width="450"}
+
+```{r}
+a <- 0
+b <- 15
+altura <- 1 / (b -a)
+altura
+base <- 2
+area <- base * altura
+area
+paste("La probabilidad de esperar menos de 2 minutos es de ", round(area * 100, 2), "%")
+```
+
+Calcular la probabilidad por medio de la función **punif()**
+
+$$
+P(x<=2)
+$$
+
+```{r}
+x = 2
+prob1 <- punif(q = x, min = 0, max = 15)
+prob1
+prob2 <- 1  - punif(q = x, min = 0, max = 15)
+prob2
+prob3 <- punif(q = x, min = 0, max = 15, lower.tail = FALSE)
+prob3
+paste("La probabilidad de esperar menos de 2 minutosminutos es de ", round(prob1 * 100, 2), "%")
+```
+
+# Interpretación
+
+En el ejercicio de los dos dados se hizo una tabla de distribución con las permutaciones y las sumas de sus frecuencias, al ver el gráfico de su acumulado, se puede concluir con que una suma que da 7 es la que cuenta con la mayor probabilidad de ocurrir. También se calcularon las probabilidades de x cuando sea igual, mayor, o menor a diferentes números y se obtuvo que la mayor de estas es cuando x es menor a 5 con un 0.72 y la más chica de x cuando es igual a 3 con un 0.05 de probabilidad.
+
+Para el caso de los estudiantes también se analizaron las frecuencias y su acumulación, así como las probabilidades de que le ofrezcan trabajo a dos estudiantes (0.37) y a dos o más estudiantes (0.5).
+
+En cuanto a la parada de autobús, el cálculo de la densidad o altura fue utilizado para poder determinar la probabilidad de que una persona tenga que esperar el autobús en un intervalo de tiempo dado.
+
+Para calcular la probabilidad de que una persona deba de esperar más de cinco minutos se establece una base de 5 a 15, que es de 10 para luego multiplicarla por la densidad o altura, de ahí obteniendo el valor de 0.66.
+
+Si el intervalo fuera un lapso menor a 2 minutos, el 2 que es el valor máximo es multiplicado por la densidad para obtener una probabilidad de 0.13.
+
+# Bibliografía
